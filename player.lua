@@ -4,7 +4,7 @@ player = {
 	w = 36,
 	h = 54,
 	health = 100,
-	speed = 1000,
+	speed = 1750,
 	sprint = 1.5,
 	stamina = 100,
 	xvel = 0,
@@ -12,12 +12,18 @@ player = {
 	animtimer = 0,
 	animlimit = 0.3,
 	anim = false,
-	image = love.graphics.newImage("resources/player.png"),
+	textures = {
+		left = love.graphics.newImage("resources/player-left.png"),
+		right = love.graphics.newImage("resources/player-right.png")
+	},
+	direction = "right",
 	canJump = true,
 	isFalling = false
 }
 
-player.image:setFilter("nearest", "nearest")
+for i, v in pairs(player.textures) do
+	v:setFilter("nearest", "nearest")
+end
 
 function player.reset()
 	player.health = 100
@@ -37,6 +43,10 @@ end
 
 function player.update( dt )
 	if Game.State == "Game" then
+
+		camera.x = player.x - Game.Width/2 + player.w/2
+		camera.y = player.y - Game.Height/2 + player.h/2
+
 		local ddx, ddy = 0, 0
 		local sprint = 1
 		if love.keyboard.isDown( Game.Controls.Sprint ) then
@@ -48,9 +58,11 @@ function player.update( dt )
 		if love.keyboard.isDown( Game.Controls.Left ) then
 			ddx = -player.speed * sprint
 			player.animtimer = player.animtimer + dt
+			player.direction = "left"
 		elseif love.keyboard.isDown( Game.Controls.Right ) then
 			ddx = player.speed * sprint
 			player.animtimer = player.animtimer + dt
+			player.direction = "right"
 		else
 			player.animtimer = 0
 			player.anim = false
@@ -70,7 +82,7 @@ function player.update( dt )
 		player.xvel = (player.xvel+(ddx*dt))
 		
 		--if not player.isFalling then
-			player.xvel = player.xvel * 0.9955 --friction is sensitive for some reason
+			player.xvel = player.xvel * 0.995 --friction is sensitive for some reason
 		--else
 		--	player.xvel = player.xvel * 0.998
 		--end
@@ -104,7 +116,7 @@ function player.draw()
 		
 		local y = player.y
 		if player.anim then y = y - 5 end
-		love.graphics.draw( player.image, player.x, y )
+		love.graphics.draw( player.textures[player.direction], player.x, y )
 
 	end
 
@@ -112,8 +124,7 @@ end
 
 function player.keypressed( key )
 	if key == Game.Controls.Jump and player.canJump then
-		print("Jumping!")
-		player.yvel = -250
+		player.yvel = -350
 		player.canJump = false
 	end
 end

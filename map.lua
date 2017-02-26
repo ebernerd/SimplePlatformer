@@ -11,17 +11,18 @@ map = {
 		bg = love.graphics.newSpriteBatch( tileset, 5000 ),
 	},
 	quads = {},
-	gravity = 550,
 }
 
 --Add the texture quads
 local tilemaplookup = {
-	[0] = {
-		"dirt", "goal", "", "", "", "", "", "", "", "",
-	}
+	{ "dirt", "grass", "cutoffleft", "cutofftop", "cutoffright", "cutoffbottom", "", "", "", "" },
+	{ "gcl", "gcr", "gcil", "gcir", "", "", "", "", "", ""},
+	{ "goal", "", "", "", "", "", "", "", "", "" }
 }
 for y, b in pairs( tilemaplookup ) do
 	for x, k in pairs( b ) do
+		local xa = (x-1)*editor.tilesize
+		local ya = (y-1)*editor.tilesize
 		map.quads[ k ] = love.graphics.newQuad( (x-1)*editor.tilesize, (y-1)*editor.tilesize, editor.tilesize, editor.tilesize, tileset:getWidth(), tileset:getHeight() )
 	end
 end
@@ -54,25 +55,26 @@ local tile = {
 }
 tile.__index = tile
 
+function tile:new( data )
+	local data = data or {}
+	local self = setmetatable( data, tile )
+	return self
+end
+
 function map.placeTile( x, y, layer, data )
 	--for loading levels without colliders
 	local data = data or {}
 	data.x = x
 	data.y = y
 	data.layer = layer
-	local t = {
-		x = x,
-		y = y,
-		layer = layer,
-		texture = data.texture or "dirt"
-	}
+	local t = tile:new( data )
 	if t.hasAnimation then
 		table.insert( map.animated, t )
 	end
 	if not t.static then
 		table.insert( map.nonstatic, t )
 	end
-	table.insert( map.tiles, t)
+	table.insert( map.tiles, t )
 	map.updateSpriteBatches()
 	return
 end

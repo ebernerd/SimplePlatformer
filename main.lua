@@ -8,8 +8,37 @@ Game = {
 		Right = "d",
 		Jump = "space",
 		Sprint = "lshift",
-	}
+	},
+	Fonts = {},
+	Font = function( fontface, size )
+
+		if not Game.Fonts[fontface] then
+			Game.Fonts[fontface] = {}
+		end
+		if not Game.Fonts[fontface][size] then
+			Game.Fonts[fontface][size] = love.graphics.newFont( "resources/" .. fontface .. ".ttf", size )
+		end
+
+		return Game.Fonts[fontface][size]
+
+	end,
+	SetFont = function( fontface, size )
+		love.graphics.setFont( Game.Font( fontface, size ) )
+	end,
+	Worlds = {
+		[1] = {
+			name = "Grasslands",
+			description = "Testing stuffs!",
+			gravity = 750,
+			levels = {
+				[1] = "1",
+				[2] = "2",
+
+			}
+		}
+	},
 }
+tween = require "tween"
 bump = require "bump"
 require "copy"
 require "camera"
@@ -19,6 +48,8 @@ require "map"
 require "player"
 
 function love.load()
+
+	Game.SetFont( "OpenSans-Light", 20 )
 
 end
 

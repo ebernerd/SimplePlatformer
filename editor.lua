@@ -1,3 +1,6 @@
+local tileset = love.graphics.newImage( "resources/tilemap.png" )
+tileset:setFilter( "nearest", "nearest" )
+
 editor = {
 	mx = 0,
 	my = 0,
@@ -8,6 +11,8 @@ editor = {
 	filename = "Untitled",
 	saved = false,
 	camspeed = 1,
+	scrolltimer = 0,
+	showscroll = false,
 }
 
 local layers = {"fg", "mg", "bg"}
@@ -16,12 +21,17 @@ local chunk = love.filesystem.load( "resources/tiles.lua" )()
 for k, v in pairs( chunk ) do
 	table.insert( tiles, v )
 end
-print( table.serialize( tiles ) )
 
 function editor.update( dt )
 
 	if Game.State == "Editor" then
-
+		if editor.showscroll then
+			editor.scrolltimer = editor.scrolltimer + dt
+			if editor.scrolltimer > 0.7 then
+				editor.showscroll = false
+				editor.scrolltimer = 0
+			end
+		end
 	
 		if love.keyboard.isDown("w") then
 			camera.y = camera.y - editor.camspeed
@@ -40,7 +50,7 @@ function editor.update( dt )
 		if love.mouse.isDown( 1 ) then
 			if not map.checkPos( editor.mx, editor.my, layers[editor.layer] ) then
 				editor.saved = false
-				map.placeTile( editor.mx, editor.my, layers[editor.layer], tiles[editor.selected] )
+				map.placeTile( editor.mx, editor.my, layers[editor.layer], copy3(tiles[editor.selected]) )
 			end
 		elseif love.mouse.isDown( 2 ) then
 			if map.checkPos( editor.mx, editor.my, layers[editor.layer] ) then
@@ -58,8 +68,7 @@ function editor.draw()
 	if Game.State == "Editor" then
 
 
-		love.graphics.setBackgroundColor( 63, 159, 193 )
-		map.draw()
+		--love.graphics.setBackgroundColor( 63, 159, 193 )
 		--Draw cursor thing--
 		love.graphics.setColor( 255, 255, 255 )
 		love.graphics.rectangle( "line", editor.mx, editor.my, editor.tilesize, editor.tilesize )
@@ -72,7 +81,21 @@ function editor.draw()
 			love.graphics.rectangle( "fill", camera.x, bh, Game.Width, 75 )
 			love.graphics.setColor( 42, 42, 42 )
 			love.graphics.print( "Layer: " .. layers[editor.layer], camera.x, bh )
-			love.graphics.print( "Selected: " .. tiles[editor.selected].texture, camera.x, bh + fh )
+		end
+
+		if editor.showscroll then
+
+			Game.SetFont( "OpenSans-Light", 35 )
+
+			love.graphics.setColor( 255, 255, 255, 50 )
+			love.graphics.rectangle("fill", camera.x, camera.y, Game.Width, Game.Height)
+
+			love.graphics.setColor( 255, 255, 255 )
+			love.graphics.printf( tiles[editor.selected].texture, camera.x, camera.y + (Game.Height/2), Game.Width, "center" )
+			love.graphics.draw( tileset, map.quads[tiles[editor.selected].texture], camera.x + Game.Width/2 -25, camera.y + (Game.Height/2)-50)
+			
+			Game.SetFont( "OpenSans-Light", 20 )
+
 		end
 
 	end
@@ -122,6 +145,10 @@ function editor.keyreleased( key )
 end
 
 function editor.wheelmoved( x, y )
+	if y ~= 0 then
+		editor.showscroll = true
+		editor.scrolltimer = 0
+	end
 	if y > 0 then
 		editor.selected = editor.selected + 1
 		if editor.selected > #tiles then
